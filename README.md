@@ -70,8 +70,8 @@ AutoML_Pro/
 ### 1. Clone the repository
 
 ```
-git clone https://github.com/your-username/AutoML_Pro.git
-cd AutoML_Pro
+git clone https://github.com/VeenaKutty/AutoML_PRO.git
+cd AutoML_PRO
 ```
 
 ### 2. Create a virtual environment
