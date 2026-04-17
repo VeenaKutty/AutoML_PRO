@@ -6,11 +6,29 @@ import seaborn as sns
 from src.trainer import train
 from src.predictor import predict
 
+
+st.title("AutoML Pro")
+
+st.markdown("""
+End-to-end machine learning system that automatically:
+- Detects problem type
+- Preprocesses data
+- Compares models
+- Selects the best model
+- Generates predictions
+""")
+
+
 st.set_page_config(page_title="AutoML Pro", layout="wide")
 
 st.title(" AutoML Pro - End to End ML System")
 
 file = st.file_uploader("Upload your CSV file", type=["csv"])
+menu = st.sidebar.selectbox(
+    "Navigation",
+    ["Overview", "EDA", "Train", "Predict"]
+)
+
 
 if file is not None:
 
@@ -31,18 +49,33 @@ if file is not None:
     st.write(f"Shape: {df.shape}")
 
     target = st.selectbox(" Select Target Column", df.columns)
-    st.write(" Target Distribution:")
+    st.write("Target Distribution:")
     st.write(df[target].value_counts())
-    
-    st.subheader(" Exploratory Data Analysis")
+
+    if df[target].nunique() < 2:
+        st.warning("Target has only one class. Training will fail.")
+
+    if df[target].value_counts().min() < 5:
+        st.warning("Dataset is highly imbalanced.") 
+    st.subheader("Dataset Summary")
 
     col1, col2 = st.columns(2)
+
+    with col1:
+        st.write("Shape:", df.shape)
+
+    with col2:
+        st.write("Missing Values:")
+        st.write(df.isnull().sum())
+        st.subheader(" Exploratory Data Analysis")
+
+        col1, col2 = st.columns(2)  
 
     with col1:
         st.write("### Correlation Heatmap")
         try:
             fig, ax = plt.subplots()
-            sns.heatmap(df.corr(numeric_only=True), ax=ax)
+            sns.heatmap(df.corr(numeric_only=True),annot=True, ax=ax)
             st.pyplot(fig)
         except:
             st.warning("Not enough numeric data for correlation")
@@ -64,6 +97,12 @@ if file is not None:
                 score, problem_type, leaderboard = train(df, target)
 
                 st.success(" Model Trained Successfully!")
+                with open("artifacts/model.pkl", "rb") as f:
+                    st.download_button(
+                            label="Download Model",
+                            data=f,
+                            file_name="model.pkl"
+                            )
                 st.write(f"**Problem Type:** {problem_type}")
                 st.write(f"**Best Score:** {score}")
 
@@ -81,7 +120,7 @@ if file is not None:
 
             
                 st.subheader(" Model Comparison")
-
+                st.caption("Scores are based on cross-validation performance.")
                 fig, ax = plt.subplots()
                 ax.bar(leaderboard_df["model"], leaderboard_df["score"])
                 ax.set_ylabel("Score")
@@ -101,7 +140,10 @@ if file is not None:
 
     for col in df.columns:
         if col != target:
-            input_data[col] = st.text_input(f"Enter {col}")
+            if df[col].dtype in ["int64", "float64"]:
+                input_data[col] = st.number_input(col)
+            else:
+                input_data[col] = st.text_input(col)
 
     if st.button("Predict"):
         try:
