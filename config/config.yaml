@@ -1,0 +1,23 @@
+models:
+  classification:
+    LogisticRegression:
+      C: [0.1, 1, 10]
+    RandomForestClassifier:
+      n_estimators: [100, 200]
+      max_depth: [None, 10]
+
+  regression:
+    LinearRegression: {}
+    RandomForestRegressor:
+      n_estimators: [100, 200]
+      max_depth: [None, 10]
+
+feature_selection:
+  method: "SelectKBest"
+  k: 10
+
+outlier:
+  method: "IQR"
+
+smote: true
+cv_folds: 5
